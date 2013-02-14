@@ -269,7 +269,8 @@ C<amount> is in cents.
 
 sub charges_refund {
 	my ($self,$id,$amount) = (@_);
-
+    $self->{-post} = 1;
+    
 	return $self->_compose(
 		'charges/'.$id.'/refund',
 		$amount ? (amount => $amount) : []
@@ -530,6 +531,7 @@ sub _compose {
 	# reset
 	undef $self->{-success};
 	undef $self->{-error};
+    my $force_post = delete $self->{-post};
 
 	my $ua = LWP::UserAgent->new;
 	undef my $res;
@@ -539,7 +541,7 @@ sub _compose {
 		$res = $ua->request(
 			DELETE $url, Authorization => $self->{-auth}
 		);
-	} elsif (scalar @_ >= 2) {
+	} elsif (scalar @_ >= 2 || $force_post) {
 		$res = $ua->request(
 			POST $url, Authorization => $self->{-auth},
 				Content => [ @_ ]
